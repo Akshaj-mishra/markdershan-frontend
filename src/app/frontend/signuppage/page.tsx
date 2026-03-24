@@ -20,12 +20,12 @@ export default function SignUpPage() {
     });
     const [firebaseError, setFirebaseError] = useState('');
 
-    const validatePassword = (value) => {
+    const validatePassword = (value: string) => {
         if (value.length < 8) return 'Password must be at least 8 characters';
         return '';
     };
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
 
@@ -45,7 +45,7 @@ export default function SignUpPage() {
         }
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         if (errors.password || errors.confirmPassword) return;
@@ -53,7 +53,7 @@ export default function SignUpPage() {
         try {
             await createUserWithEmailAndPassword(auth, formData.email, formData.password);
             router.push('/frontend/loginpage');
-        } catch (error) {
+        } catch (error : any) {
             setFirebaseError(error.message || 'Sign up failed');
         }
     };

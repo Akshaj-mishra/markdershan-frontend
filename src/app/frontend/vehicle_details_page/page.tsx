@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useLayoutEffect } from "react";
 import { Truck, Plus, ChevronDown, ChevronUp } from "lucide-react";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
 interface Vehicle {
   id?: string;
@@ -78,11 +78,11 @@ const Vehicle_details = () => {
   const fetchVehicles = async () => {
     try {
       setIsLoading(true);
+      setError(null);
       const response = await fetch(`${API_BASE_URL}/vehicles`);
       if (!response.ok) throw new Error("Failed to fetch vehicles");
       const data = await response.json();
       setVehicleProfiles(data);
-      setError(null);
     } catch (err) {
       console.error("Error fetching vehicles:", err);
       setError("Failed to load vehicles");
@@ -91,52 +91,53 @@ const Vehicle_details = () => {
     }
   };
 
-  const saveVehicle = async () => {
+  const validateForm = () => {
     if (!name.trim()) {
       setError("Vehicle name is required");
-      return;
+      return false;
     }
     if (!milage.trim()) {
-      setError("Vehicle milage is required");
-      return;
+      setError("Vehicle mileage is required");
+      return false;
     }
     if (!vehicleType) {
       setError("Vehicle type is required");
-      return;
+      return false;
     }
+    return true;
+  };
 
-    let genWeight = "";
-    let genHeight = "";
-    let computedTyres = "";
-    if (vehicleType === "Two wheeler") {
-      genWeight = "150";
-      genHeight = "1.1";
-      computedTyres = "2";
-    } else if (vehicleType === "Three wheeler") {
-      genWeight = "350";
-      genHeight = "1.7";
-      computedTyres = "3";
-    } else if (vehicleType === "Four wheeler") {
-      genWeight = "1200";
-      genHeight = "1.5";
-      computedTyres = "4";
-    } else if (vehicleType === "Heavy vehicle") {
-      genWeight = "36287";
-      genHeight = "4.1";
-      computedTyres = "6";
+  const getDefaultValuesByType = (type: string) => {
+    switch (type) {
+      case "Two wheeler":
+        return { weight: "150", height: "1.1", tyres: "2" };
+      case "Three wheeler":
+        return { weight: "350", height: "1.7", tyres: "3" };
+      case "Four wheeler":
+        return { weight: "1200", height: "1.5", tyres: "4" };
+      case "Heavy vehicle":
+        return { weight: "36287", height: "4.1", tyres: "6" };
+      default:
+        return { weight: "", height: "", tyres: "" };
     }
+  };
 
+  const saveVehicle = async () => {
+    if (!validateForm()) return;
+
+    const defaults = getDefaultValuesByType(vehicleType);
+    
     const vehicleData: Vehicle = {
-      name,
+      name: name.trim(),
       vehicleType,
-      engineCapacity: capacity,
-      fuelCapacity,
-      weight: weight.trim() || genWeight,
-      height: genHeight,
-      milage,
-      noTyres: computedTyres,
-      additionalPayloadWeight: payload_weight,
-      additionalPayloadHeight: payload_height,
+      engineCapacity: capacity.trim(),
+      fuelCapacity: fuelCapacity.trim() || "60",
+      weight: weight.trim() || defaults.weight,
+      height: defaults.height,
+      milage: milage.trim(),
+      noTyres: defaults.tyres,
+      additionalPayloadWeight: payload_weight.trim() || undefined,
+      additionalPayloadHeight: payload_height.trim() || undefined,
     };
 
     try {
@@ -147,35 +148,41 @@ const Vehicle_details = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(vehicleData),
       });
-      if (!response.ok) throw new Error("Failed to save vehicle");
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || "Failed to save vehicle");
+      }
 
       resetForm();
       await fetchVehicles();
     } catch (err) {
       console.error("Error saving vehicle:", err);
-      setError("Failed to save vehicle");
+      setError(err instanceof Error ? err.message : "Failed to save vehicle");
     } finally {
       setIsLoading(false);
     }
   };
 
   const updateVehicle = async () => {
-    if (!editVehicleId || !name.trim()) {
-      setError("Vehicle name is required");
+    if (!editVehicleId) {
+      setError("No vehicle selected for editing");
       return;
     }
+    
+    if (!validateForm()) return;
 
     const vehicleData: Vehicle = {
-      name,
+      name: name.trim(),
       vehicleType,
-      engineCapacity: capacity,
-      fuelCapacity,
-      weight,
-      height,
-      milage,
-      noTyres,
-      additionalPayloadWeight: payload_weight,
-      additionalPayloadHeight: payload_height,
+      engineCapacity: capacity.trim(),
+      fuelCapacity: fuelCapacity.trim(),
+      weight: weight.trim(),
+      height: height.trim(),
+      milage: milage.trim(),
+      noTyres: noTyres.trim(),
+      additionalPayloadWeight: payload_weight.trim() || undefined,
+      additionalPayloadHeight: payload_height.trim() || undefined,
     };
 
     try {
@@ -187,35 +194,45 @@ const Vehicle_details = () => {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(vehicleData),
-        },
+        }
       );
-      if (!response.ok) throw new Error("Failed to update vehicle");
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || "Failed to update vehicle");
+      }
 
       setIsEditing(false);
       resetForm();
       await fetchVehicles();
     } catch (err) {
       console.error("Error updating vehicle:", err);
-      setError("Failed to update vehicle");
+      setError(err instanceof Error ? err.message : "Failed to update vehicle");
     } finally {
       setIsLoading(false);
     }
   };
 
   const deleteVehicle = async (vehicleId: string) => {
+    if (!vehicleId) return;
+    
     try {
       setIsLoading(true);
       setError(null);
       const response = await fetch(`${API_BASE_URL}/vehicles/${vehicleId}`, {
         method: "DELETE",
       });
-      if (!response.ok) throw new Error("Failed to delete vehicle");
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || "Failed to delete vehicle");
+      }
 
       await fetchVehicles();
       setSelectedVehicle(null);
     } catch (err) {
       console.error("Error deleting vehicle:", err);
-      setError("Failed to delete vehicle");
+      setError(err instanceof Error ? err.message : "Failed to delete vehicle");
     } finally {
       setIsLoading(false);
     }
@@ -232,6 +249,31 @@ const Vehicle_details = () => {
     setVehicleType("");
     setMilage("");
     setNoTyres("");
+    setEditVehicleId(null);
+    setIsEditing(false);
+    setSelectedVehicle(null);
+  };
+
+  const handleEditSelected = () => {
+    if (selectedVehicle !== null) {
+      const vehicle = vehicleProfiles.find(
+        (veh) => veh.id === selectedVehicle
+      );
+      if (vehicle) {
+        setIsEditing(true);
+        setEditVehicleId(vehicle.id || null);
+        setName(vehicle.name);
+        setHeight(vehicle.height);
+        setWeight(vehicle.weight);
+        setCapacity(vehicle.engineCapacity);
+        setFuelCapacity(vehicle.fuelCapacity || "60");
+        setMilage(vehicle.milage);
+        setNoTyres(vehicle.noTyres);
+        setPayloadWeight(vehicle.additionalPayloadWeight || "");
+        setPayloadHeight(vehicle.additionalPayloadHeight || "");
+        setVehicleType(vehicle.vehicleType);
+      }
+    }
   };
 
   const themedLabelClass = `mb-1.5 block text-sm font-medium ${
@@ -501,31 +543,7 @@ const Vehicle_details = () => {
                     ? "border-zinc-600 text-zinc-200 hover:bg-zinc-800"
                     : "border-zinc-200 text-zinc-700 hover:bg-zinc-50"
                 }`}
-                onClick={() => {
-                  if (selectedVehicle !== null) {
-                    setIsEditing(true);
-                    setEditVehicleId(selectedVehicle);
-                    const v = vehicleProfiles.find(
-                      (veh) => veh.id === selectedVehicle,
-                    );
-                    if (v) {
-                      setName(v.name);
-                      setHeight(v.height.replace(/[^0-9.]/g, ""));
-                      setWeight(v.weight.replace(/[^0-9.]/g, ""));
-                      setCapacity(v.engineCapacity.replace(/[^0-9.]/g, ""));
-                      setFuelCapacity((v.fuelCapacity || "").replace(/[^0-9.]/g, "") || "60");
-                      setMilage((v.milage || "").replace(/[^0-9.]/g, ""));
-                      setNoTyres((v.noTyres || "").replace(/[^0-9]/g, ""));
-                      setPayloadWeight(
-                        (v.additionalPayloadWeight || "").replace(/[^0-9.]/g, ""),
-                      );
-                      setPayloadHeight(
-                        (v.additionalPayloadHeight || "").replace(/[^0-9.]/g, ""),
-                      );
-                      setVehicleType(v.vehicleType);
-                    }
-                  }
-                }}
+                onClick={handleEditSelected}
                 disabled={selectedVehicle === null || isLoading}
               >
                 <Plus className="mr-1 h-4 w-4" />
@@ -548,7 +566,7 @@ const Vehicle_details = () => {
                 <div
                   key={vehicle.id}
                   onClick={() => setSelectedVehicle(vehicle.id || null)}
-                  className={`w-full rounded-2xl border p-4 text-left transition ${
+                  className={`w-full rounded-2xl border p-4 text-left transition cursor-pointer ${
                     selectedVehicle === vehicle.id
                       ? isDark
                         ? "border-yellow-500 bg-yellow-500/10"
@@ -584,7 +602,9 @@ const Vehicle_details = () => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            deleteVehicle(vehicle.id || "");
+                            if (vehicle.id) {
+                              deleteVehicle(vehicle.id);
+                            }
                           }}
                           className={`min-h-10 rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
                             isDark

@@ -21,7 +21,7 @@ export const auth = getAuth(app);
 
 const googleProvider = new GoogleAuthProvider();
 
-export const signInWithEmail = (email: string, password: string) => {
+export const signInWithEmail = (email, password) => {
   return signInWithEmailAndPassword(auth, email, password);
 };
 

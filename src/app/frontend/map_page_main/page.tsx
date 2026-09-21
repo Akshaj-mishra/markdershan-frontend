@@ -762,7 +762,7 @@ function RouteOptimizerComponent() {
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2 mb-1">
               <button
-                onClick={() => router.push('/frontend/dashboard')}
+                onClick={() => router.push('/frontend/user_dashboard')}
                 className={`flex h-10 w-10 items-center justify-center rounded-full transition ${
                   isDark
                     ? "bg-black/70 text-gray-300 hover:bg-black/90 hover:text-white border border-white/10"

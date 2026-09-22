@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { auth } from "../firebase/config";
 import { onAuthStateChanged, User } from "firebase/auth";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
 interface Vehicle {
   id?: string;

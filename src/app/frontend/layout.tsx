@@ -3,6 +3,6 @@ export const metadata = {
   description: 'Create your account to access Markdarshan services',
 };
 
-export default function Layout({ children }) {
+export default function Layout({ children }: { children: React.ReactNode }) {
   return children;
 }

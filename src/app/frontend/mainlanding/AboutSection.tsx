@@ -38,7 +38,7 @@ export default function AboutSection() {
           
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3 ">About <span className="text-gray-900 dark:text-amber-300 font-extrabold  font-Yashie_Demoheader text-4xl mb-3 ml-4"> Markdarshan</span></h2>
           <p className="text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-            As travel enthusiasts and technologists, we saw a gap in smart travel planning tools. Traditional apps don't consider your vehicle's capabilities, fuel needs, or safety. We built this platform to make travel smarter, more efficient, and safer — tailored just for you.
+            As travel enthusiasts and technologists, we saw a gap in smart travel planning tools. Traditional apps don&apos;t consider your vehicle&apos;s capabilities, fuel needs, or safety. We built this platform to make travel smarter, more efficient, and safer — tailored just for you.
           </p>
         </motion.div>
 
